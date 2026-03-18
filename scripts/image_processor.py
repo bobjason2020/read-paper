@@ -37,6 +37,7 @@ class ImageExtractor:
             return 0
 
         extracted_count = 0
+        extracted_names = set()
 
         for img_dir_name in IMAGE_DIRECTORIES:
             src_dir = self.tex_dir / img_dir_name
@@ -44,14 +45,28 @@ class ImageExtractor:
                 print(f"  🖼️  从 {img_dir_name}/ 提取图片...")
 
                 for file_path in src_dir.iterdir():
-                    if file_path.suffix.lower() in IMAGE_EXTENSIONS:
+                    if file_path.is_file() and file_path.suffix.lower() in IMAGE_EXTENSIONS:
                         dest_path = self.temp_images_dir / file_path.name
                         try:
                             shutil.copy2(file_path, dest_path)
                             extracted_count += 1
+                            extracted_names.add(file_path.name)
                             print(f"     ✓ {file_path.name}")
                         except Exception as e:
                             print(f"     ✗ {file_path.name}: {e}")
+
+        print(f"  🖼️  从根目录提取图片...")
+        for file_path in self.tex_dir.iterdir():
+            if file_path.is_file() and file_path.suffix.lower() in IMAGE_EXTENSIONS:
+                if file_path.name in extracted_names:
+                    continue
+                dest_path = self.temp_images_dir / file_path.name
+                try:
+                    shutil.copy2(file_path, dest_path)
+                    extracted_count += 1
+                    print(f"     ✓ {file_path.name}")
+                except Exception as e:
+                    print(f"     ✗ {file_path.name}: {e}")
 
         if extracted_count > 0:
             print(f"  ✅ 成功提取 {extracted_count} 张图片到临时目录")
