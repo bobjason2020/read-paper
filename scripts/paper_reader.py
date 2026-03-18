@@ -108,7 +108,7 @@ class PaperReader:
         """步骤4: 提取图片并生成清单（供AI分析）"""
         print(f"\nImages  步骤5: 提取图片并生成清单")
 
-        # 提取图片到临时目录
+        # 提取图片到临时目录（包括PDF转PNG）
         from .image_processor import ImageExtractor
         extractor = ImageExtractor(
             self.folder_manager.tex_path,
@@ -123,9 +123,7 @@ class PaperReader:
                 self.folder_manager.images_path
             )
             list_generator.generate_image_list()  # 生成 images.md 文件
-
-            # 清理临时目录
-            self.folder_manager.cleanup_temp_directory()
+            # 注意：临时目录 .temp_images/ 保留不删除，供阶段二使用
     
     def _step5_generate_readme_template(self):
         """步骤5: 生成README模板（机械化，不依赖图片）"""
@@ -140,11 +138,12 @@ class PaperReader:
             images_dir=self.folder_manager.images_path
         )
 
-        # 保存模板文件
+        # 保存模板文件（使用论文文件夹同名）
+        notes_filename = f"{self.folder_manager.paper_dir.name}.md"
         template_gen.save_templates(important_images=[])
 
         # 打印成功信息
-        print(f"   ✓ README模板: {self.folder_manager.paper_dir / 'README.md'}")
+        print(f"   ✓ 精读笔记: {self.folder_manager.paper_dir / notes_filename}")
         print(f"   ✓ 图片清单: {self.folder_manager.paper_dir / 'images.md'}")
     
     def _step6_print_summary(self):
@@ -164,9 +163,11 @@ class PaperReader:
         print(f"   │   └── {self.paper_info.id}.pdf")
         print(f"   ├── tex/")
         print(f"   │   └── [TeX源文件...]")
-        print(f"   ├── images/")
-        print(f"   │   └── (图片文件待添加)")
-        print(f"   └── README.md")
+        print(f"   ├── .temp_images/  ← 已提取所有图片（PDF已转为PNG，供AI分析）")
+        print(f"   ├── images/       ← AI选中的图片将移至此")
+        print(f"   ├── images.md     ← 图片清单（AI需分析）")
+        notes_filename = f"{self.folder_manager.paper_dir.name}.md"
+        print(f"   └── {notes_filename} ← 精读笔记模板")
         
         print(f"\n🎯 下一步:")
         print(f"   1. 打开 {self.folder_manager.paper_dir}/README.md 开始精读")

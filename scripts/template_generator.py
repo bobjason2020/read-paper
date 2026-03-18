@@ -294,7 +294,7 @@ class TemplateGenerator:
 总计: {len(img_files)} 张重要图片
 
 > 本文用于快速预览所有图片，便于插入到精读笔记中。
-> 使用方式：复制下方的 Markdown 图片引用到 README.md 的对应位置。
+> 使用方式：复制下方的 Markdown 图片引用到笔记文件的对应位置。
 
 ---
 
@@ -362,12 +362,14 @@ class TemplateGenerator:
         Args:
             important_images: 重要图片列表
         """
-        # 保存README
-        readme_content = self.generate_readme_template(important_images)
-        readme_path = self.images_dir.parent / 'README.md'
-        with open(readme_path, 'w', encoding='utf-8') as f:
-            f.write(readme_content)
-        print(f"   ✓ 笔记模板: {readme_path}")
+        # 保存笔记文件（使用文件夹同名）
+        paper_dir = self.images_dir.parent
+        notes_filename = f"{paper_dir.name}.md"
+        notes_content = self.generate_readme_template(important_images)
+        notes_path = paper_dir / notes_filename
+        with open(notes_path, 'w', encoding='utf-8') as f:
+            f.write(notes_content)
+        print(f"   ✓ 精读笔记: {notes_path}")
 
         # 保存图片索引
         if important_images:

@@ -15,17 +15,26 @@ allowed-tools: Read, Write, Bash, WebFetch, TaskCreate, TaskUpdate, TaskList, Ta
 
 运行命令：
 ```bash
-cd "$HOME/.claude/skills/read-paper"
-python -m scripts.main "[arXiv链接或ID]" --output-dir paper
+# Windows (PowerShell)
+$env:PYTHONPATH="skill安装目录"; python -m scripts.main "[arXiv链接或ID]" --output-dir "绝对路径/paper"
+
+# 示例：
+$env:PYTHONPATH="$HOME/.claude/skills/read-paper"; python -m scripts.main "2202.03532" --output-dir "D:\用户\项目路径\paper"
 ```
+
+**⚠️ 重要说明：**
+- `PYTHONPATH` 必须设置为 skill 安装目录（用于导入模块）
+- `output-dir` 必须使用**绝对路径**，指向用户希望生成论文文件的目录
+- 禁止使用相对路径，否则文件会生成在错误位置
 
 脚本会自动完成：
 1. 解析arXiv ID，获取论文元数据
 2. 创建文件夹：`paper/[论文名]/`
 3. 下载PDF和TeX源码
 4. 从TeX提取所有图片到 `.temp_images/`
-5. 生成 `images.md` 图片清单（包含预览和AI判断指令）
-6. 生成 `README.md` 笔记模板（空章节，待填充）
+5. **自动转换PDF为PNG**（使用pdftoppm或ImageMagick）
+6. 生成 `images.md` 图片清单（包含预览和AI判断指令）
+7. 生成 `[论文名].md` 笔记模板（空章节，待填充）
 
 ### 阶段二：AI深度分析（创造性工作）
 **（本阶段由AI完成，基于阶段一生成的文件）**
@@ -34,7 +43,7 @@ python -m scripts.main "[arXiv链接或ID]" --output-dir paper
 1. 读取 `images.md`，通过视觉分析判断每张图片的优先级
 2. 调用 `scripts/process_selected_images.py` 处理选中的图片
 3. 阅读 `pdf/` 和 `tex/` 源码，提取论文信息
-4. 填充 `README.md` 所有章节（图文并茂）
+4. 填充 `[论文名].md` 所有章节（图文并茂）
 5. 更新阅读状态为"已完成"
 
 ---
@@ -70,7 +79,7 @@ python -m scripts.main "[arXiv链接或ID]" --output-dir paper
 - ✅ `paper/[论文名]/pdf/[ID].pdf` 存在且可读取
 - ✅ `paper/[论文名]/tex/` 包含TeX源码文件
 - ✅ `paper/[论文名]/images.md` 已生成，包含图片预览
-- ✅ `paper/[论文名]/README.md` 已生成，包含空章节模板
+- ✅ `paper/[论文名]/[论文名].md` 已生成，包含空章节模板
 
 如果任何文件缺失，提示用户重新运行阶段一。
 
@@ -122,30 +131,32 @@ python -m scripts.main "[arXiv链接或ID]" --output-dir paper
 **接收步骤2的筛选结果，运行：**
 
 ```bash
-cd "$HOME/.claude/skills/read-paper/scripts"
-python process_selected_images.py "paper/[论文名]" "图片1,图片2,..."
+# Windows (PowerShell)
+$env:PYTHONPATH="skill安装目录"; python "skill安装目录/scripts/process_selected_images.py" "论文目录绝对路径" "图片1,图片2,..."
+
+# 示例：
+$env:PYTHONPATH="$HOME/.claude/skills/read-paper"; python "$HOME/.claude/skills/read-paper/scripts/process_selected_images.py" "D:\用户\项目路径\paper\attention-is-all-you-need" "transformer-architecture.png,training-pipeline.png"
 ```
 
 **参数说明：**
-- 第1参数：论文目录路径（相对或绝对路径）
+- 第1参数：论文目录路径（**必须使用绝对路径**）
 - 第2参数：选中的高/中优先级图片列表，用逗号分隔（**必须包含扩展名**）
 
 **示例：**
 ```bash
-python process_selected_images.py \
-  "paper/attention-is-all-you-need" \
-  "transformer-architecture.png,training-pipeline.pdf,main-results.png,ablation-study.pdf"
+$env:PYTHONPATH="$HOME/.claude/skills/read-paper"
+python "$HOME/.claude/skills/read-paper/scripts/process_selected_images.py" "D:\用户\项目路径\paper\attention-is-all-you-need" "transformer-architecture.png,training-pipeline.png,main-results.png,ablation-study.png"
 ```
 
 **脚本会自动执行：**
 1. 将选中图片从 `.temp_images/` 移动到 `images/`
-2. 将PDF格式图片转换为PNG
-3. 为每张图片生成对应的 `.md` 解读文档模板（位于 `images/` 目录）
+2. 为每张图片生成对应的 `.md` 解读文档模板（位于 `images/` 目录）
+（注意：PDF转PNG已在阶段一完成）
 
 **完成后验证：**
-- ✅ `images/` 目录包含所有选中图片
+- ✅ `images/` 目录包含所有选中图片（PNG格式）
 - ✅ `images/` 目录包含每个图片的同名 `.md` 文档
-- ✅ PDF均已转换为PNG并删除原PDF
+- ✅ 所有选中图片已从 `.temp_images/` 复制并完成解读模板生成
 
 ---
 
@@ -189,7 +200,7 @@ python process_selected_images.py \
 
 ### 步骤5：生成完整精读笔记 ⭐核心步骤
 
-**5.1 读取 `README.md` 模板**
+**5.1 读取 `[论文名].md` 模板**
 
 了解需要填充的所有章节。
 
@@ -242,9 +253,9 @@ python process_selected_images.py \
 
 **5.5 更新阅读状态**
 
-在 `README.md` 末尾，将：
+在 `[论文名].md` 末尾，将：
 ```markdown
-- 阅读状态: 待AI分析
+- 阅读状态: 待分析
 ```
 改为：
 ```markdown
@@ -273,7 +284,7 @@ python process_selected_images.py \
    │   ├── [图片文件]
    │   └── [图片同名].md    ← 已填充的图片解读文档
    ├── images.md            ← 图片清单（已标记判断）
-   └── README.md            ← 已填充的完整精读笔记
+   └── [文件夹名].md        ← 已填充的完整精读笔记
 
 📊 分析统计:
    - 提取图片: [N] 张
@@ -300,7 +311,7 @@ python process_selected_images.py \
    ✅ 图片穿插在合理位置
 
 🎯 下一步建议:
-   1. 打开 paper/[文件夹名]/README.md 查看完整分析
+   1. 打开 paper/[文件夹名]/[文件夹名].md 查看完整分析
    2. 查看 paper/[文件夹名]/images/ 下的图片精读文档
    3. 根据需要补充个人思考或修改笔记
 ```
@@ -417,8 +428,8 @@ read-paper https://arxiv.org/abs/2401.12345
 
 **阶段一执行：**
 ```bash
-cd ~/.claude/skills/read-paper
-python -m scripts.main 2401.12345 --output-dir paper
+# Windows (PowerShell)
+$env:PYTHONPATH="$HOME/.claude/skills/read-paper"; python -m scripts.main "2401.12345" --output-dir "D:\用户\项目路径\paper"
 ```
 
 **输出：**
@@ -430,7 +441,7 @@ python -m scripts.main 2401.12345 --output-dir paper
    ├── tex/ (源码文件)
    ├── .temp_images/ (临时图片)
    ├── images.md      ← AI需要分析这个文件
-   └── README.md       ← AI需要填充这个文件
+   └── [论文名].md       ← AI需要填充这个文件
 ```
 
 **阶段二执行（AI自动）：**
@@ -438,9 +449,9 @@ python -m scripts.main 2401.12345 --output-dir paper
 1. AI使用 `TaskCreate` 创建任务列表
 2. AI读取 `images.md`，使用 `Read` 工具查看每张图片
 3. AI判断优先级，记录在 `images.md`
-4. AI运行脚本：`python process_selected_images.py "paper/attention-mechanism-transformer" "arch.png,results.png,..."`
+4. AI运行脚本：`$env:PYTHONPATH="skill目录"; python "skill目录/scripts/process_selected_images.py" "论文目录绝对路径" "arch.png,results.png,..."`
 5. AI阅读PDF和TeX源码
-6. AI填充 `README.md`，插入图片到对应章节
+6. AI填充 `[论文名].md`，插入图片到对应章节
 7. AI更新状态，输出完成摘要
 
 ---

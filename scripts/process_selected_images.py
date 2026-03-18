@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-处理AI筛选后的图片
-接收AI生成的高/中优先级图片列表，执行PDF转换和生成模板
+处理AI筛选后的图片（简化版）
+阶段二：只负责移动选中图片并生成解读模板
+注意：阶段一已完成PDF转PNG，.temp_images/中都是图片文件
 """
 
 import sys
@@ -16,83 +17,36 @@ def process_selected_images(paper_dir: str, image_list: str):
 
     Args:
         paper_dir: 论文目录路径
-        image_list: 图片文件名列表（用逗号分隔）
+        image_list: 图片文件名列表（用逗号分隔），高/中优先级图片
     """
     paper_path = Path(paper_dir)
     images_dir = paper_path / 'images'
-    images_temp_dir = paper_path / '.temp_images'
+    temp_images_dir = paper_path / '.temp_images'
 
     # 解析图片列表
     selected_images = [img.strip() for img in image_list.split(',') if img.strip()]
 
-    print(f"\n🤖 处理AI筛选后的图片")
+    print(f"\n🤖 处理AI筛选后的图片（阶段二）")
     print(f"   选中的图片: {len(selected_images)} 张")
 
     # 从临时目录移动选中的图片到images目录
     moved_count = 0
     for img_name in selected_images:
-        src_path = images_temp_dir / img_name
+        src_path = temp_images_dir / img_name
         if src_path.exists():
             dest_path = images_dir / img_name
             try:
-                subprocess.run(['cp', str(src_path), str(dest_path)], check=True)
+                # 使用shutil.copy2（跨平台）
+                import shutil
+                shutil.copy2(src_path, dest_path)
                 moved_count += 1
                 print(f"   ✓ {img_name}")
-            except subprocess.CalledProcessError as e:
+            except Exception as e:
                 print(f"   ✗ {img_name}: {e}")
+        else:
+            print(f"   ⚠️  文件不存在: {img_name}（可能已被删除或名称不匹配）")
 
     print(f"\n   ✅ 已移动 {moved_count} 张图片到images目录")
-
-    # PDF转PNG
-    print(f"\n📄 PDF转PNG")
-    pdf_files = list(images_dir.glob("*.pdf"))
-
-    converted_count = 0
-    for pdf_file in pdf_files:
-        png_file = pdf_file.with_suffix('.png')
-
-        # 如果PNG已存在，跳过
-        if png_file.exists():
-            print(f"   ⏭️  跳过: {pdf_file.name} (PNG已存在)")
-            continue
-
-        try:
-            # 使用pdftoppm
-            cmd = [
-                'pdftoppm',
-                '-png',
-                '-r', '300',
-                '-singlefile',
-                str(pdf_file),
-                str(png_file.with_suffix(''))
-            ]
-            subprocess.run(cmd, check=True, capture_output=True)
-            print(f"   ✓ {pdf_file.name} -> {png_file.name}")
-
-            # 删除原PDF
-            pdf_file.unlink()
-            converted_count += 1
-
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            try:
-                # 使用ImageMagick
-                cmd = [
-                    'convert',
-                    '-density', '300',
-                    str(pdf_file),
-                    '-quality', '100',
-                    str(png_file)
-                ]
-                subprocess.run(cmd, check=True, capture_output=True)
-                print(f"   ✓ {pdf_file.name} -> {png_file.name} (ImageMagick)")
-
-                # 删除原PDF
-                pdf_file.unlink()
-                converted_count += 1
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print(f"   ❌ 转换失败: {pdf_file.name}")
-
-    print(f"\n   ✅ 转换完成: {converted_count} 个文件")
 
     # 生成图片解读模板
     print(f"\n📖 生成图片解读模板")
@@ -136,11 +90,15 @@ def process_selected_images(paper_dir: str, image_list: str):
     print(f"\n   ✅ 已生成 {generated_count} 个图片解读模板")
 
     # 清理临时目录
-    if images_temp_dir.exists():
-        subprocess.run(['rm', '-rf', str(images_temp_dir)])
-        print(f"\n   ✅ 已清理临时目录")
+    if temp_images_dir.exists():
+        try:
+            import shutil
+            shutil.rmtree(temp_images_dir)
+            print(f"\n   ✅ 已清理临时目录 .temp_images/")
+        except Exception as e:
+            print(f"\n   ⚠️  清理临时目录失败: {e}")
 
-    print("\n✅ 图片处理完成！")
+    print("\n✅ 阶段二图片处理完成！")
 
 
 def main():
