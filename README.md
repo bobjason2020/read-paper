@@ -271,7 +271,7 @@ A: 可能的原因：
 
 解决方案：
 - 检查 `tex/` 目录是否存在
-- 查看 `config.py` 中的 `IMAGE_DIRECTORIES` 配置
+- 查看 `config.py` 中的 `IMAGE_EXTENSIONS` 配置
 - 手动从PDF中提取图片
 
 </details>

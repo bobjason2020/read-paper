@@ -36,9 +36,6 @@ LOW_PRIORITY_KEYWORDS = [
 # 支持的图片格式
 IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.pdf', '.eps', '.svg'}
 
-# 常见图片目录名（TeX源码中）
-IMAGE_DIRECTORIES = ['pics', 'figures', 'fig', 'images', 'img', 'diagrams']
-
 # 默认配置
 DEFAULT_OUTPUT_DIR = "paper"
 DEFAULT_DPI = 300
