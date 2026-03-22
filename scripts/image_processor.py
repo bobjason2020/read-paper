@@ -9,7 +9,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .config import IMAGE_EXTENSIONS, IMAGE_DIRECTORIES
+from .config import IMAGE_EXTENSIONS
 
 
 class ImageExtractor:
@@ -39,32 +39,21 @@ class ImageExtractor:
         extracted_count = 0
         extracted_names = set()
 
-        for img_dir_name in IMAGE_DIRECTORIES:
-            src_dir = self.tex_dir / img_dir_name
-            if src_dir.exists() and src_dir.is_dir():
-                print(f"  🖼️  从 {img_dir_name}/ 提取图片...")
-
-                for file_path in src_dir.iterdir():
-                    if file_path.is_file() and file_path.suffix.lower() in IMAGE_EXTENSIONS:
-                        dest_path = self.temp_images_dir / file_path.name
-                        try:
-                            shutil.copy2(file_path, dest_path)
-                            extracted_count += 1
-                            extracted_names.add(file_path.name)
-                            print(f"     ✓ {file_path.name}")
-                        except Exception as e:
-                            print(f"     ✗ {file_path.name}: {e}")
-
-        print(f"  🖼️  从根目录提取图片...")
-        for file_path in self.tex_dir.iterdir():
+        # 递归遍历所有子文件夹，提取图片（不限于写死的目录名）
+        print(f"  🖼️  递归扫描 {self.tex_dir} 下所有图片...")
+        for file_path in self.tex_dir.rglob("*"):
             if file_path.is_file() and file_path.suffix.lower() in IMAGE_EXTENSIONS:
+                # 避免重复：如果同名文件已提取则跳过
                 if file_path.name in extracted_names:
                     continue
                 dest_path = self.temp_images_dir / file_path.name
                 try:
                     shutil.copy2(file_path, dest_path)
                     extracted_count += 1
-                    print(f"     ✓ {file_path.name}")
+                    extracted_names.add(file_path.name)
+                    # 显示相对路径，便于追溯来源
+                    rel_path = file_path.relative_to(self.tex_dir)
+                    print(f"     ✓ {file_path.name} (来源: {rel_path})")
                 except Exception as e:
                     print(f"     ✗ {file_path.name}: {e}")
 
