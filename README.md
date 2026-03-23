@@ -93,16 +93,16 @@ brew install poppler imagemagick
 
 ### 基本用法
 
-```bash
-# 使用arXiv链接
-python -m scripts.main https://arxiv.org/abs/2401.12345
+**推荐配置**：Trae 中文版 + Kimi-K2.5 模型
 
-# 使用arXiv ID
-python -m scripts.main 2401.12345
+**使用方式**：直接告诉智能体 `精读论文 + arXiv链接` 即可。
 
-# 指定输出目录
-python -m scripts.main 2401.12345 --output-dir my-papers/
-```
+示例：
+> 精读论文：https://arxiv.org/abs/2401.12345
+
+智能体会自动完成两阶段工作流：
+1. 阶段一：下载论文、提取图片、生成模板
+2. 阶段二：AI深度分析，生成图文并茂的精读笔记
 
 ### 完整工作流
 
