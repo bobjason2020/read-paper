@@ -77,16 +77,15 @@ brew install poppler imagemagick
 
 ### 安装步骤
 
-```bash
-# 克隆仓库
-git clone https://github.com/your-username/read-paper-skill.git
+1. 下载本项目中的 `read-paper` 技能文件夹（包含 `skill.md`、`.gitignore` 等）
+2. 将技能文件夹安装到对应工具的 `skills` 目录下：
 
-# 进入目录
-cd read-paper-skill
-
-# 安装Python依赖
-pip install requests
-```
+| 工具 | 安装路径 |
+|------|----------|
+| Claude Code | `C:\Users\<用户名>\.claude\skills` |
+| Trae 国际版 | `C:\Users\<用户名>\.trae\skills` |
+| Trae 中文版 | `C:\Users\<用户名>\.trae-cn\skills` |
+| OpenClaw | `C:\Users\<用户名>\.openclaw\skills` |
 
 ---
 
