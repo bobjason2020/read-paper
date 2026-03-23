@@ -339,6 +339,8 @@ A: 支持以下格式：
 ## 🙏 致谢
 
 - [arXiv](https://arxiv.org/) - 开放获取的学术论文库
+- [Trae](https://trae.ai/) - AI驱动的开发者工具
+- [MiniMax](https://www.minimaxi.com/) - 大模型技术提供方
 - [Poppler](https://poppler.freedesktop.org/) - PDF渲染库
 - [ImageMagick](https://imagemagick.org/) - 图像处理工具
 
